@@ -1,5 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Package, Trash2, Plus, Minus, ArrowLeft, Cherry, Coffee, Sparkles, Droplets, Pill, ShoppingBag, ClipboardList, Zap, PlusCircle } from 'lucide-react';
+import { calculatePadRecommendation } from '../utils/kitCalculator';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const ALL_POTENTIAL_ITEMS = [
     { id: 1, name: 'Heavy Flow Pad', description: 'Maximum protection for heavy flow days.', price: 14, defaultQty: 4, icon: <Droplets className="text-pink-500" /> },
@@ -16,17 +18,48 @@ const ALL_POTENTIAL_ITEMS = [
 ];
 
 export const KitRecommendation = ({ onBack, userData }) => {
-    // Initial State Setup
+    // Initial State Setup with Personalization Logic
     const [items, setItems] = useState(() => {
+        const recommendation = calculatePadRecommendation(userData);
         const hasSevereCramps = userData?.symptoms?.includes('cramps');
-        return ALL_POTENTIAL_ITEMS.slice(0, 8).map(item => ({
-            ...item,
-            quantity: item.id === 5 && hasSevereCramps ? 4 : item.defaultQty
-        }));
+        const hasAcne = userData?.symptoms?.includes('acne');
+        const hasItching = userData?.symptoms?.includes('itching');
+
+        const alwaysIncludeIds = [1, 2, 3, 4, 5, 6, 8, 9];
+        const conditionalIds = [];
+        if (hasItching) conditionalIds.push(7); // VWash
+        if (hasAcne) conditionalIds.push(10); // Acne Patches
+
+        const initialItemIds = [...alwaysIncludeIds, ...conditionalIds];
+
+        return ALL_POTENTIAL_ITEMS
+            .filter(item => initialItemIds.includes(item.id))
+            .map(item => {
+                let quantity = item.defaultQty;
+                if (item.id === 1) quantity = recommendation.heavyPads;
+                else if (item.id === 2) quantity = recommendation.mediumPads;
+                else if (item.id === 3) quantity = recommendation.lightPads;
+                else if (item.id === 5 && hasSevereCramps) quantity = 4;
+                return { ...item, quantity };
+            });
     });
 
-    const [addons, setAddons] = useState(() => ALL_POTENTIAL_ITEMS.slice(8));
-    
+    const [addons, setAddons] = useState(() => {
+        const selectedIds = items.map(i => i.id);
+        return ALL_POTENTIAL_ITEMS.filter(item => !selectedIds.includes(item.id));
+    });
+
+    const [showSuccess, setShowSuccess] = useState(false);
+    const [showCheckout, setShowCheckout] = useState(false);
+    const [formData, setFormData] = useState({
+        name: '',
+        address: '',
+        phone: '',
+        pincode: ''
+    });
+    const [formErrors, setFormErrors] = useState({});
+
+
     const packagingFee = 80;
     const deliveryFee = 100;
 
@@ -49,6 +82,30 @@ export const KitRecommendation = ({ onBack, userData }) => {
         setItems(prev => [...prev, { ...addonToAdd, quantity: addonToAdd.defaultQty }]);
     };
 
+    const handleCheckout = () => {
+        setShowCheckout(true);
+    };
+
+    const handleBuyNow = (e) => {
+        e.preventDefault();
+        const errors = {};
+        if (!formData.name.trim()) errors.name = 'Name is required';
+        if (!formData.address.trim()) errors.address = 'Address is required';
+        if (!formData.phone.trim()) errors.phone = 'Phone number is required';
+        else if (formData.phone.length < 10) errors.phone = 'Enter a valid phone number';
+        if (!formData.pincode.trim()) errors.pincode = 'Pincode is required';
+        else if (formData.pincode.length < 6) errors.pincode = 'Enter a valid pincode';
+
+        if (Object.keys(errors).length > 0) {
+            setFormErrors(errors);
+            return;
+        }
+
+        setShowCheckout(false);
+        setShowSuccess(true);
+    };
+
+
     const subtotal = useMemo(() => items.reduce((sum, item) => sum + (item.price * item.quantity), 0), [items]);
     const grandTotal = subtotal + packagingFee + deliveryFee;
 
@@ -69,9 +126,8 @@ export const KitRecommendation = ({ onBack, userData }) => {
                             </div>
                             <div className="flex-1">
                                 <h4 className="text-sm font-bold text-gray-800">{addon.name}</h4>
-                                <p className="text-[10px] text-gray-500">₹{addon.price}</p>
                             </div>
-                            <button 
+                            <button
                                 onClick={() => handleAddToKit(addon)}
                                 className="p-2 text-[#FF6F91] hover:bg-pink-50 rounded-full transition-colors"
                             >
@@ -86,7 +142,7 @@ export const KitRecommendation = ({ onBack, userData }) => {
 
     return (
         <div className="w-full max-w-4xl mx-auto p-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <button 
+            <button
                 onClick={onBack}
                 className="flex items-center gap-2 text-gray-500 hover:text-[#FF6F91] transition-colors mb-8 font-medium"
             >
@@ -113,24 +169,21 @@ export const KitRecommendation = ({ onBack, userData }) => {
                                 <div className="w-16 h-16 bg-pink-50 rounded-xl flex items-center justify-center shrink-0">
                                     {React.cloneElement(item.icon, { size: 32 })}
                                 </div>
-                                
                                 <div className="flex-1">
                                     <h3 className="font-bold text-gray-800">{item.name}</h3>
                                     <p className="text-xs text-gray-500 mb-1">{item.description}</p>
-                                    <p className="text-[#FF6F91] font-bold">₹{item.price * item.quantity}</p>
                                 </div>
-
                                 <div className="flex flex-col items-end gap-2 shrink-0">
                                     {!item.isLocked ? (
                                         <div className="flex items-center gap-3 bg-slate-50 rounded-full px-3 py-1 border border-slate-100">
-                                            <button 
+                                            <button
                                                 onClick={() => updateQuantity(item.id, -1)}
                                                 className="text-gray-400 hover:text-[#FF6F91] transition-colors"
                                             >
                                                 <Minus size={16} />
                                             </button>
                                             <span className="font-bold text-gray-700 w-4 text-center">{item.quantity}</span>
-                                            <button 
+                                            <button
                                                 onClick={() => updateQuantity(item.id, 1)}
                                                 className="text-gray-400 hover:text-[#FF6F91] transition-colors"
                                             >
@@ -142,7 +195,7 @@ export const KitRecommendation = ({ onBack, userData }) => {
                                             Fixed Qty: 1
                                         </div>
                                     )}
-                                    <button 
+                                    <button
                                         onClick={() => handleRemoveFromKit(item)}
                                         className="text-xs text-slate-400 hover:text-red-500 flex items-center gap-1 transition-colors group"
                                     >
@@ -153,8 +206,6 @@ export const KitRecommendation = ({ onBack, userData }) => {
                             </div>
                         ))
                     )}
-                    
-                    {/* Add-Ons Section (Mobile Only - appears below all kit content if flex-col) */}
                     <div className="block lg:hidden">
                         <AddOnsSection />
                     </div>
@@ -167,37 +218,136 @@ export const KitRecommendation = ({ onBack, userData }) => {
                             <Package className="text-[#FF6F91]" size={24} />
                             Order Summary
                         </h2>
-                        
                         <div className="space-y-4 text-sm font-medium">
-                            <div className="flex justify-between text-gray-500">
-                                <span>Subtotal</span>
-                                <span>₹{subtotal}</span>
-                            </div>
-                            <div className="flex justify-between text-gray-500">
-                                <span>Packaging</span>
-                                <span>₹{packagingFee}</span>
-                            </div>
-                            <div className="flex justify-between text-gray-500 border-b border-dashed border-slate-100 pb-4">
-                                <span>Delivery</span>
-                                <span>₹{deliveryFee}</span>
-                            </div>
-                            <div className="flex justify-between text-lg font-bold text-gray-800 pt-2">
+                            <div className="flex justify-between text-lg font-bold text-gray-800 pt-2 border-t border-pink-50">
                                 <span>Grand Total</span>
                                 <span className="text-[#FF6F91]">₹{grandTotal}</span>
                             </div>
                         </div>
-
-                        <button className="w-full mt-8 py-4 bg-[#FF6F91] text-white font-bold rounded-2xl shadow-lg hover:bg-[#FF5C82] hover:scale-[1.02] transition-all">
-                            Checkout Now
+                        <button
+                            onClick={handleCheckout}
+                            className="w-full mt-8 py-4 bg-[#FF6F91] text-white font-bold rounded-2xl shadow-lg hover:bg-[#FF5C82] hover:scale-[1.02] transition-all"
+                        >
+                            Place Order
                         </button>
                     </div>
-
-                    {/* Add-Ons Section (Desktop Only - appears below summary) */}
                     <div className="hidden lg:block">
                         <AddOnsSection />
                     </div>
                 </div>
             </div>
+
+            {/* Checkout Modal */}
+            <AnimatePresence>
+                {showCheckout && (
+                    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl relative"
+                        >
+                            <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                                <ShoppingBag className="text-[#FF6F91]" />
+                                Delivery Details
+                            </h2>
+
+                            <form onSubmit={handleBuyNow} className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1">Full Name</label>
+                                    <input
+                                        type="text"
+                                        value={formData.name}
+                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                        className={`w-full p-3 rounded-xl border ${formErrors.name ? 'border-red-400' : 'border-gray-200'} outline-none focus:border-[#FF6F91] transition-colors`}
+                                        placeholder="Enter your name"
+                                    />
+                                    {formErrors.name && <p className="text-red-500 text-[10px] mt-1">{formErrors.name}</p>}
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1">Full Address</label>
+                                    <textarea
+                                        value={formData.address}
+                                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                                        className={`w-full p-3 rounded-xl border ${formErrors.address ? 'border-red-400' : 'border-gray-200'} outline-none focus:border-[#FF6F91] transition-colors h-24`}
+                                        placeholder="Enter detailed address"
+                                    />
+                                    {formErrors.address && <p className="text-red-500 text-[10px] mt-1">{formErrors.address}</p>}
+                                </div>
+                                <div className="flex gap-4">
+                                    <div className="flex-1">
+                                        <label className="block text-sm font-semibold text-gray-700 mb-1">Phone Number</label>
+                                        <input
+                                            type="tel"
+                                            value={formData.phone}
+                                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                            className={`w-full p-3 rounded-xl border ${formErrors.phone ? 'border-red-400' : 'border-gray-200'} outline-none focus:border-[#FF6F91] transition-colors`}
+                                            placeholder="1234567890"
+                                        />
+                                        {formErrors.phone && <p className="text-red-500 text-[10px] mt-1">{formErrors.phone}</p>}
+                                    </div>
+                                    <div className="w-1/3">
+                                        <label className="block text-sm font-semibold text-gray-700 mb-1">Pincode</label>
+                                        <input
+                                            type="text"
+                                            value={formData.pincode}
+                                            onChange={(e) => setFormData({ ...formData, pincode: e.target.value })}
+                                            className={`w-full p-3 rounded-xl border ${formErrors.pincode ? 'border-red-400' : 'border-gray-200'} outline-none focus:border-[#FF6F91] transition-colors`}
+                                            placeholder="000000"
+                                        />
+                                        {formErrors.pincode && <p className="text-red-500 text-[10px] mt-1">{formErrors.pincode}</p>}
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-3 pt-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowCheckout(false)}
+                                        className="flex-1 py-3 text-gray-500 font-bold hover:bg-gray-50 rounded-xl transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="flex-[2] py-3 bg-[#FF6F91] text-white font-bold rounded-xl shadow-md hover:bg-[#FF5C82] transition-colors"
+                                    >
+                                        Buy Now
+                                    </button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Success Modal */}
+
+            <AnimatePresence>
+                {showSuccess && (
+                    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            className="bg-white w-full max-w-sm rounded-[2rem] p-8 shadow-2xl text-center space-y-6"
+                        >
+                            <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto">
+                                <Sparkles className="text-green-500" size={40} />
+                            </div>
+                            <div className="space-y-2">
+                                <h3 className="text-2xl font-bold text-gray-800">Order Placed!</h3>
+                                <p className="text-gray-500 font-medium">Your kit will be delivered 2 days before your period starts.</p>
+                            </div>
+                            <button
+                                onClick={() => setShowSuccess(false)}
+                                className="w-full py-4 bg-gray-900 text-white font-bold rounded-2xl hover:bg-black transition-colors"
+                            >
+                                Ok
+                            </button>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

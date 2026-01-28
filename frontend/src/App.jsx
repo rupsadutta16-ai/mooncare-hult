@@ -12,6 +12,8 @@ import { CycleDetails } from './components/CycleDetails';
 import { SuccessScreen } from './components/SuccessScreen';
 import { SymptomLogScreen } from './components/SymptomLogScreen';
 import { MoodLogScreen } from './components/MoodLogScreen';
+import { ChatBot } from './components/ChatBot';
+
 
 function App() {
   const [view, setView] = useState('intro'); // intro, home, signup, login, questions, symptomLog, moodLog
@@ -206,7 +208,9 @@ function App() {
       <AnimatePresence mode="wait">
         {renderContent()}
       </AnimatePresence>
+      {isLoggedIn && <ChatBot />}
     </>
+
   );
 }
 

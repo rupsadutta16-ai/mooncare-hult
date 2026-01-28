@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Navbar } from './Navbar';
-import { ChatBot } from './ChatBot';
 import { KitRecommendation } from './KitRecommendation';
+
 import { PeriodTracker } from './PeriodTracker';
 import { Toast } from './ui/Toast';
 import {
@@ -20,8 +20,16 @@ import kitImage from '../assets/kit.png';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Past Periods History Component
-const PastPeriodsHistory = ({ data, onBack }) => {
-    const sortedDates = Object.keys(data).sort((a, b) => new Date(b) - new Date(a));
+const PastPeriodsHistory = ({ cycles, onBack }) => {
+    const calculateDays = (start, end) => {
+        if (!start) return "Starting date not yet set";
+        if (!end) return "don't know number of days yet";
+        const startDate = new Date(start);
+        const endDate = new Date(end);
+        const diffTime = Math.abs(endDate - startDate);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+        return `${diffDays} days`;
+    };
 
     return (
         <motion.div
@@ -46,61 +54,90 @@ const PastPeriodsHistory = ({ data, onBack }) => {
                 </button>
             </div>
 
-            <div className="max-w-2xl mx-auto w-full p-6 pb-24 space-y-6">
-                {sortedDates.length === 0 ? (
+            <div className="max-w-3xl mx-auto w-full p-6 pb-24 space-y-6">
+                {!cycles || cycles.length === 0 ? (
                     <div className="text-center py-20 bg-white rounded-3xl border border-pink-100 shadow-sm">
                         <p className="text-gray-500 font-medium">No past period data found yet.</p>
                         <p className="text-sm text-gray-400 mt-2">Start tracking to see your history here!</p>
                     </div>
                 ) : (
-                    sortedDates.map(date => {
-                        const dayData = data[date];
-                        return (
-                            <div key={date} className="bg-white p-6 rounded-3xl border border-pink-100 shadow-sm hover:shadow-md transition-shadow">
-                                <div className="flex justify-between items-start mb-4 border-b border-pink-50 pb-3">
+                    [...cycles].reverse().map((cycle, index) => (
+                        <div key={index} className="bg-white p-6 rounded-3xl border border-pink-100 shadow-sm hover:shadow-md transition-shadow">
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b border-pink-50 pb-4 gap-2">
+                                <div>
                                     <h3 className="text-lg font-bold text-[#FF6F91]">
-                                        {new Date(date).toLocaleDateString('en-US', {
-                                            weekday: 'long',
-                                            year: 'numeric',
-                                            month: 'long',
-                                            day: 'numeric'
-                                        })}
+                                        {cycle.startDate ? new Date(cycle.startDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'Start date not set'} - {cycle.endDate ? new Date(cycle.endDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'now'}
                                     </h3>
+
+                                    <p className="text-sm text-gray-500 font-medium">
+                                        Duration: {calculateDays(cycle.startDate, cycle.endDate)}
+                                    </p>
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    {dayData.flow && (
-                                        <div className="bg-pink-50/50 p-3 rounded-2xl">
-                                            <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">Flow</p>
-                                            <p className="font-bold text-gray-700">{dayData.flow}</p>
-                                        </div>
-                                    )}
-                                    {dayData.cramps && (
-                                        <div className="bg-pink-50/50 p-3 rounded-2xl">
-                                            <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">Cramps</p>
-                                            <p className="font-bold text-gray-700">{dayData.cramps}</p>
-                                        </div>
-                                    )}
-                                    {dayData.mood && (
-                                        <div className="bg-pink-50/50 p-3 rounded-2xl">
-                                            <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">Mood</p>
-                                            <p className="font-bold text-gray-700">{dayData.mood}</p>
-                                        </div>
-                                    )}
-                                    {dayData.fatigue && (
-                                        <div className="bg-pink-50/50 p-3 rounded-2xl">
-                                            <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">Fatigue</p>
-                                            <p className="font-bold text-gray-700">{dayData.fatigue}</p>
-                                        </div>
-                                    )}
+                                <div className="bg-pink-50 px-4 py-1.5 rounded-full">
+                                    <span className="text-xs font-bold text-[#FF6F91] uppercase tracking-wider">Cycle {cycles.length - index}</span>
                                 </div>
                             </div>
-                        );
-                    })
+
+                            <div className="space-y-4">
+                                {Object.keys(cycle.logs).sort().map((date) => {
+                                    const dayData = cycle.logs[date];
+                                    const dayNum = Math.ceil((new Date(date) - new Date(cycle.startDate)) / (1000 * 60 * 60 * 24)) + 1;
+
+                                    return (
+                                        <div key={date} className="bg-pink-50/30 p-4 rounded-2xl border border-pink-50">
+                                            <div className="flex items-center gap-2 mb-3">
+                                                <div className="w-8 h-8 bg-[#FF6F91] text-white rounded-full flex items-center justify-center text-xs font-bold">
+                                                    D{dayNum}
+                                                </div>
+                                                <h4 className="font-bold text-gray-700">Day {dayNum} Logs</h4>
+                                                <span className="text-xs text-gray-400 ml-auto">
+                                                    {new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                                </span>
+                                            </div>
+                                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                                {dayData.flow && (
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[10px] text-gray-400 font-bold uppercase">Flow</span>
+                                                        <span className="text-sm font-bold text-gray-700">{dayData.flow}</span>
+                                                    </div>
+                                                )}
+                                                {dayData.cramps && (
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[10px] text-gray-400 font-bold uppercase">Cramps</span>
+                                                        <span className="text-sm font-bold text-gray-700">{dayData.cramps}</span>
+                                                    </div>
+                                                )}
+                                                {dayData.mood && (
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[10px] text-gray-400 font-bold uppercase">Mood</span>
+                                                        <span className="text-sm font-bold text-gray-700">{dayData.mood}</span>
+                                                    </div>
+                                                )}
+                                                {dayData.fatigue && (
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[10px] text-gray-400 font-bold uppercase">Fatigue</span>
+                                                        <span className="text-sm font-bold text-gray-700">{dayData.fatigue}</span>
+                                                    </div>
+                                                )}
+                                                {dayData.painRelief && (
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[10px] text-gray-400 font-bold uppercase">Pain Relief</span>
+                                                        <span className="text-sm font-bold text-gray-700">{dayData.painRelief}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    ))
                 )}
             </div>
         </motion.div>
     );
 };
+
 
 // Logged In Dashboard Component
 const Dashboard = ({
@@ -112,13 +149,19 @@ const Dashboard = ({
     setShowPeriodTracker,
     onLogMood,
     onLogSymptoms,
-    onGenerateKit
+    onGenerateKit,
+    userData
 }) => {
+
     const { daysUntilNextPeriod, phase, insight } = cycleData || {
         daysUntilNextPeriod: 5,
         phase: 'Follicular',
         insight: 'Energy levels are rising!'
     };
+
+    // Auto-set period if in menstrual phase - REMOVED as per requirements
+
+
 
     return (
         <div className="w-full max-w-4xl mx-auto flex flex-col gap-6 text-left pb-20">
@@ -148,8 +191,9 @@ const Dashboard = ({
                 {/* Symptoms Card */}
                 <div
                     onClick={onLogSymptoms}
-                    className="bg-white p-6 rounded-2xl shadow-sm border border-pink-100 flex flex-col items-center justify-center gap-3 cursor-pointer hover:shadow-md transition-shadow hover:bg-pink-50/50"
+                    className="bg-white p-6 rounded-2xl shadow-sm border border-pink-100 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:bg-pink-50/50"
                 >
+
                     <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center text-red-500">
                         <Edit3 size={24} />
                     </div>
@@ -159,8 +203,9 @@ const Dashboard = ({
                 {/* Mood Card */}
                 <div
                     onClick={onLogMood}
-                    className="bg-white p-6 rounded-2xl shadow-sm border border-pink-100 flex flex-col items-center justify-center gap-3 cursor-pointer hover:shadow-md transition-shadow hover:bg-pink-50/50"
+                    className="bg-white p-6 rounded-2xl shadow-sm border border-pink-100 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:bg-pink-50/50"
                 >
+
                     <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center text-yellow-600">
                         <Smile size={24} />
                     </div>
@@ -171,8 +216,9 @@ const Dashboard = ({
                 {isOnPeriod && (
                     <div
                         onClick={() => setShowPeriodTracker(true)}
-                        className="bg-white p-6 rounded-2xl shadow-sm border border-pink-100 flex flex-col items-center justify-center gap-3 cursor-pointer hover:shadow-md transition-shadow hover:bg-pink-50/50 md:col-span-2 lg:col-span-1"
+                        className="bg-white p-6 rounded-2xl shadow-sm border border-pink-100 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:bg-pink-50/50 md:col-span-2 lg:col-span-1"
                     >
+
                         <div className="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center text-pink-500">
                             <Droplets size={24} />
                         </div>
@@ -241,40 +287,58 @@ const Dashboard = ({
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
 
                     {/* Basal Body Temperature */}
-                    <div className="bg-white p-4 rounded-2xl shadow-sm border border-pink-100 flex flex-col items-center text-center gap-2">
+                    <div className="bg-white p-4 rounded-2xl shadow-sm border border-pink-100 flex flex-col items-center text-center gap-2 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl">
                         <Thermometer className="text-orange-400 mb-1" size={28} />
                         <span className="text-lg font-bold text-gray-800">36.5°C</span>
                         <span className="text-xs text-gray-500 font-medium">Basal body temperature</span>
                     </div>
 
+
                     {/* Heart Rate */}
-                    <div className="bg-white p-4 rounded-2xl shadow-sm border border-pink-100 flex flex-col items-center text-center gap-2">
+                    <div className="bg-white p-4 rounded-2xl shadow-sm border border-pink-100 flex flex-col items-center text-center gap-2 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl">
                         <Heart className="text-rose-500 mb-1" size={28} />
                         <span className="text-lg font-bold text-gray-800">72 bpm</span>
                         <span className="text-xs text-gray-500 font-medium">Heart rate</span>
                     </div>
 
+
                     {/* Skin Conductivity */}
-                    <div className="bg-white p-4 rounded-2xl shadow-sm border border-pink-100 flex flex-col items-center text-center gap-2">
+                    <div className="bg-white p-4 rounded-2xl shadow-sm border border-pink-100 flex flex-col items-center text-center gap-2 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl">
                         <Activity className="text-teal-500 mb-1" size={28} />
                         <span className="text-lg font-bold text-gray-800">2.5 µS</span>
                         <span className="text-xs text-gray-500 font-medium">Skin conductivity</span>
                     </div>
 
+
                     {/* Sleep Pattern */}
-                    <div className="bg-white p-4 rounded-2xl shadow-sm border border-pink-100 flex flex-col items-center text-center gap-2">
+                    <div className="bg-white p-4 rounded-2xl shadow-sm border border-pink-100 flex flex-col items-center text-center gap-2 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl">
                         <Moon className="text-indigo-400 mb-1" size={28} />
                         <span className="text-lg font-bold text-gray-800">8h 12m</span>
                         <span className="text-xs text-gray-500 font-medium">See your sleep pattern</span>
                     </div>
+
                 </div>
             </div>
 
+            {/* PCOD Warning Card */}
+            {userData?.pcod === 'unsure' && (
+                <div className="bg-white p-6 rounded-3xl shadow-sm border border-amber-100 bg-amber-50/30 flex items-center gap-4 animate-in fade-in slide-in-from-left duration-700 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl">
+                    <div className="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center text-amber-600 shrink-0">
+                        <Activity size={24} />
+                    </div>
+                    <div>
+                        <h4 className="font-bold text-gray-800">Health Note</h4>
+                        <p className="text-gray-600 font-medium">Moderate chances of PCOD, your period is sometimes irregular</p>
+                    </div>
+                </div>
+            )}
+
+
             {/* 4. Customised Period Kit Section */}
-            <motion.div
-                whileHover={{ y: -8, boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)' }}
-                className="border border-[#FF6F91] mt-8 w-full bg-[#FFF5F7] rounded-3xl overflow-hidden border border-pink-100 cursor-pointer transition-all duration-300 group"
+            <div
+                className="border border-[#FF6F91] mt-8 w-full bg-[#FFF5F7] rounded-3xl overflow-hidden cursor-pointer transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:border-pink-300 group"
             >
+
                 <div className="flex flex-col md:flex-row items-center p-8 gap-8">
                     <div className="w-full md:w-1/2 flex justify-center">
                         <img
@@ -295,7 +359,8 @@ const Dashboard = ({
                         </button>
                     </div>
                 </div>
-            </motion.div>
+            </div>
+
         </div>
     );
 };
@@ -303,10 +368,10 @@ const Dashboard = ({
 export const HomePage = ({ isLoggedIn, userData, onLogin, onSignup, onLogout, onLogSymptoms, onLogMood }) => {
     const [kitState, setKitState] = useState('idle'); // idle, loading, recommended
     const [isOnPeriod, setIsOnPeriod] = useState(false);
-    const [periodStartDate, setPeriodStartDate] = useState(null);
-    const [periodDailyData, setPeriodDailyData] = useState({});
+    const [periodCycles, setPeriodCycles] = useState([]); // Array of { startDate, endDate, logs: { date: data } }
     const [showPeriodTracker, setShowPeriodTracker] = useState(false);
     const [showHistory, setShowHistory] = useState(false);
+
     const [toastMessage, setToastMessage] = useState('');
     const [showToast, setShowToast] = useState(false);
     const [isMounted, setIsMounted] = useState(false);
@@ -324,13 +389,67 @@ export const HomePage = ({ isLoggedIn, userData, onLogin, onSignup, onLogout, on
 
     const handlePeriodToggle = (value) => {
         setIsOnPeriod(value);
+        if (value) {
+            // Check if there's an ongoing cycle
+            const activeCycle = periodCycles.find(c => !c.endDate);
+            if (!activeCycle) {
+                setPeriodCycles(prev => [...prev, {
+                    startDate: null,
+                    endDate: null,
+                    logs: {}
+                }]);
+            }
+        }
+
+    };
+
+    const handleSetPeriodStartDate = (date) => {
+        setPeriodCycles(prev => {
+            const newCycles = [...prev];
+            const activeIndex = newCycles.findIndex(c => !c.endDate);
+            if (activeIndex !== -1) {
+                newCycles[activeIndex].startDate = date;
+            } else {
+                newCycles.push({
+                    startDate: date,
+                    endDate: null,
+                    logs: {}
+                });
+            }
+            return newCycles;
+        });
     };
 
     const handleEndPeriod = () => {
         setIsOnPeriod(false);
-        setPeriodStartDate(null);
-        // We no longer clear periodDailyData to preserve history
+        const today = new Date().toISOString().split('T')[0];
+        setPeriodCycles(prev => {
+            const newCycles = [...prev];
+            const activeIndex = newCycles.findIndex(c => !c.endDate);
+            if (activeIndex !== -1) {
+                newCycles[activeIndex].endDate = today;
+            }
+            return newCycles;
+        });
     };
+
+    const updateDailyLogs = (date, data) => {
+        setPeriodCycles(prev => {
+            const newCycles = [...prev];
+            const activeIndex = newCycles.findIndex(c => !c.endDate);
+            if (activeIndex !== -1) {
+                newCycles[activeIndex].logs = {
+                    ...newCycles[activeIndex].logs,
+                    [date]: {
+                        ...newCycles[activeIndex].logs[date],
+                        ...data
+                    }
+                };
+            }
+            return newCycles;
+        });
+    };
+
 
     // Cycle Logic
     const cycleData = useMemo(() => {
@@ -373,7 +492,7 @@ export const HomePage = ({ isLoggedIn, userData, onLogin, onSignup, onLogout, on
             insight = "Winding down. You might feel more introspective or experience PMS symptoms. Be gentle with yourself.";
         }
 
-        if (isOnPeriod) {
+        if (phase === 'Menstrual' || isOnPeriod) {
             return {
                 daysUntilNextPeriod: 0,
                 phase: 'Menstrual',
@@ -381,6 +500,7 @@ export const HomePage = ({ isLoggedIn, userData, onLogin, onSignup, onLogout, on
                 currentCycleDay
             };
         }
+
 
         return {
             daysUntilNextPeriod,
@@ -426,10 +546,11 @@ export const HomePage = ({ isLoggedIn, userData, onLogin, onSignup, onLogout, on
             <AnimatePresence>
                 {showHistory && (
                     <PastPeriodsHistory
-                        data={periodDailyData}
+                        cycles={periodCycles}
                         onBack={() => setShowHistory(false)}
                     />
                 )}
+
             </AnimatePresence>
 
             {showPeriodTracker ? (
@@ -437,13 +558,13 @@ export const HomePage = ({ isLoggedIn, userData, onLogin, onSignup, onLogout, on
                     isOpen={true}
                     onClose={() => setShowPeriodTracker(false)}
                     onEndPeriod={handleEndPeriod}
-                    periodStartDate={periodStartDate}
-                    setPeriodStartDate={setPeriodStartDate}
-                    dailyData={periodDailyData}
-                    setDailyData={setPeriodDailyData}
+                    activeCycle={periodCycles.find(c => !c.endDate)}
+                    setPeriodStartDate={handleSetPeriodStartDate}
+                    updateDailyLogs={updateDailyLogs}
                     isOnPeriod={isOnPeriod}
                     handlePeriodToggle={handlePeriodToggle}
                 />
+
             ) : (
                 <>
                     <Navbar
@@ -467,7 +588,9 @@ export const HomePage = ({ isLoggedIn, userData, onLogin, onSignup, onLogout, on
                                     onLogMood={onLogMood}
                                     onLogSymptoms={onLogSymptoms}
                                     onGenerateKit={handleGenerateKit}
+                                    userData={userData}
                                 />
+
                             ) : (
                                 <div className="max-w-2xl mx-auto text-center py-12">
                                     <h1 className="text-5xl md:text-6xl font-display font-bold text-[#FF6F91] mb-6 leading-[1.1]">
@@ -494,9 +617,9 @@ export const HomePage = ({ isLoggedIn, userData, onLogin, onSignup, onLogout, on
                             )}
                         </div>
                     </main>
-                    <ChatBot className="sticky bottom-4 right-4" />
                 </>
             )}
+
 
             <Toast
                 message={toastMessage}

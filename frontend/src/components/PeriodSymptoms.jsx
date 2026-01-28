@@ -14,8 +14,10 @@ export const PeriodSymptoms = ({ formData, updateFormData, onNext, onBack }) => 
         { id: 'low', label: 'Low flow', emoji: '💧' },
         { id: 'sleep', label: 'Sleep disturbance', emoji: '😴' },
         { id: 'fatigue', label: 'Fatigue or weakness', emoji: '😫' },
+        { id: 'itching', label: 'Itching/Irritation/Rashes', emoji: '😣' },
         { id: 'none', label: 'No major issue', emoji: '✨' },
     ];
+
 
     const handleToggle = (id) => {
         const current = formData.symptoms || [];

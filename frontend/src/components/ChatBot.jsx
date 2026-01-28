@@ -77,7 +77,8 @@ export const ChatBot = () => {
     };
 
     return (
-        <div className="sticky bottom-10 right-8 z-50 flex flex-col items-end gap-4 pointer-events-none">
+        <div className="fixed bottom-10 right-12 z-50 flex flex-col items-end gap-4 pointer-events-none">
+
             {/* Chat Window */}
             <AnimatePresence>
                 {isOpen && (

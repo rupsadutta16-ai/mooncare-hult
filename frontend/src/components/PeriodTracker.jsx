@@ -6,13 +6,15 @@ export const PeriodTracker = ({
     isOpen,
     onClose,
     onEndPeriod,
-    periodStartDate,
+    activeCycle,
     setPeriodStartDate,
-    dailyData,
-    setDailyData,
+    updateDailyLogs,
     isOnPeriod,
     handlePeriodToggle
 }) => {
+    const periodStartDate = activeCycle?.startDate;
+    const dailyData = activeCycle?.logs || {};
+
     const [selectedDate, setSelectedDate] = useState(periodStartDate || new Date().toISOString().split('T')[0]);
     const [currentViewDate, setCurrentViewDate] = useState(new Date().toISOString().split('T')[0]);
     const [hasSetStartDate, setHasSetStartDate] = useState(!!periodStartDate);
@@ -69,19 +71,14 @@ export const PeriodTracker = ({
     const currentDayData = dailyData[currentViewDate] || {};
 
     const updateDailyData = (field, value) => {
-        setDailyData(prev => ({
-            ...prev,
-            [currentViewDate]: {
-                ...prev[currentViewDate],
-                [field]: value
-            }
-        }));
+        updateDailyLogs(currentViewDate, { [field]: value });
     };
 
     const handleSave = () => {
         onClose();
         // The parent HomePage logic already has Toast and handles closing
     };
+
 
     return (
         <AnimatePresence>
@@ -291,7 +288,7 @@ export const PeriodTracker = ({
                                     }}
                                     className="w-full py-3 bg-white border-2 border-[#FF6F91]/20 text-[#FF6F91] font-bold rounded-xl hover:bg-pink-50 transition-colors text-sm"
                                 >
-                                    End Period Tracking
+                                    My Period is over
                                 </button>
                             </>
                         )}
