@@ -1,0 +1,59 @@
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700&family=Nunito:wght@400;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-pastel-pink: #FFD6E0;
+  --color-pastel-lavender: #E6E6FA;
+  --color-pastel-peach: #FFDAB9;
+  --color-pastel-offwhite: #FDFBF7;
+  --color-pastel-mint: #D4F0F0;
+  --color-pastel-yellow: #FFFACD;
+  --color-pastel-dark: #4A4A4A;
+  --color-pastel-primary: #FF6F91;
+
+  --font-sans: 'Inter', sans-serif;
+  --font-display: 'Baloo 2', cursive;
+  --font-body: 'Nunito', sans-serif;
+
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --radius-3xl: 2rem;
+
+  --shadow-soft: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+}
+
+
+
+@layer base {
+  body {
+    @apply bg-[var(--color-pastel-offwhite)] text-[var(--color-pastel-dark)] font-[family-name:--font-body];
+  }
+}
+
+@layer components {
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-[family-name:--font-display];
+  }
+
+  .btn-primary {
+    @apply bg-pink-400 hover:bg-pink-500 text-white font-bold py-3 px-6 rounded-2xl transition-all duration-300 shadow-md transform hover:scale-105 active:scale-95;
+  }
+
+  .btn-secondary {
+    @apply bg-white border-2 border-pink-200 text-pink-500 font-bold py-3 px-6 rounded-2xl hover:bg-pink-50 transition-all duration-300;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 rounded-xl border border-pink-100 bg-white focus:outline-none focus:ring-2 focus:ring-pink-300 transition-all font-medium text-lg;
+  }
+
+  .card {
+    @apply bg-white rounded-3xl p-6 shadow-[var(--shadow-soft)] mx-auto w-full max-w-md;
+  }
+}
