@@ -111,7 +111,8 @@ const Dashboard = ({
     setShowHistory,
     setShowPeriodTracker,
     onLogMood,
-    onLogSymptoms
+    onLogSymptoms,
+    onGenerateKit
 }) => {
     const { daysUntilNextPeriod, phase, insight } = cycleData || {
         daysUntilNextPeriod: 5,
@@ -286,7 +287,10 @@ const Dashboard = ({
                         <h2 className="text-2xl md:text-3xl font-display font-bold text-[#FF6F91] mb-4">
                             Get customised period kit suggested by AI delivered based on your needs for this month
                         </h2>
-                        <button className="px-6 py-3 bg-[#FF6F91] text-white font-bold rounded-full shadow-md hover:bg-[#FF5C82] transition-colors">
+                        <button
+                            onClick={onGenerateKit}
+                            className="px-6 py-3 bg-[#FF6F91] text-white font-bold rounded-full shadow-md hover:bg-[#FF5C82] transition-colors"
+                        >
                             Generate Kit Suggestion
                         </button>
                     </div>
@@ -462,6 +466,7 @@ export const HomePage = ({ isLoggedIn, userData, onLogin, onSignup, onLogout, on
                                     setShowPeriodTracker={setShowPeriodTracker}
                                     onLogMood={onLogMood}
                                     onLogSymptoms={onLogSymptoms}
+                                    onGenerateKit={handleGenerateKit}
                                 />
                             ) : (
                                 <div className="max-w-2xl mx-auto text-center py-12">
