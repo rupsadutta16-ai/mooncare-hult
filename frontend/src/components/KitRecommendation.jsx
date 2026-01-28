@@ -2,16 +2,16 @@ import React, { useState, useMemo } from 'react';
 import { Package, Trash2, Plus, Minus, ArrowLeft, Cherry, Coffee, Sparkles, Droplets, Pill, ShoppingBag, ClipboardList, Zap, PlusCircle } from 'lucide-react';
 
 const ALL_POTENTIAL_ITEMS = [
-    { id: 1, name: 'Heavy Flow Pad', description: 'Maximum protection for heavy flow days.', price: 12, defaultQty: 4, icon: <Droplets className="text-pink-500" /> },
-    { id: 2, name: 'Medium Flow Pad', description: 'Balanced comfort and absorption.', price: 9.6, defaultQty: 6, icon: <Droplets className="text-pink-400" /> },
-    { id: 3, name: 'Low Flow Pad', description: 'Ultra-thin for light days and spotting.', price: 7.2, defaultQty: 4, icon: <Droplets className="text-pink-300" /> },
-    { id: 4, name: '2 Herbal Tea Sachets', description: 'Soothing blend to reduce bloating.', price: 36, defaultQty: 1, icon: <Coffee className="text-amber-600" /> },
-    { id: 5, name: 'Cramp Relief Patches', description: 'Fast-acting long-lasting relief.', price: 48, defaultQty: 2, icon: <Zap className="text-teal-500" /> },
-    { id: 6, name: 'Dark Chocolate', description: 'Rich 70% cocoa for mood enhancement.', price: 60, defaultQty: 1, icon: <Cherry className="text-rose-800" /> },
-    { id: 8, name: 'Herbal Supplement Powder', description: 'Natural hormone balance support.', price: 60, defaultQty: 1, icon: <Pill className="text-emerald-500" /> },
-    { id: 7, name: 'V-Wash', description: 'Gentle pH-balanced intimate cleanser.', price: 54, defaultQty: 1, icon: <Droplets className="text-blue-400" /> },
-    { id: 9, name: 'Hygiene Wipes', description: 'Quick refreshing cleanse on the go.', price: 36, defaultQty: 1, icon: <Sparkles className="text-blue-300" /> },
-    { id: 10, name: 'Acne Patches', description: 'Hydrocolloid patches for clear skin.', price: 6, defaultQty: 1, icon: <Sparkles className="text-yellow-400" /> },
+    { id: 1, name: 'Heavy Flow Pad', description: 'Maximum protection for heavy flow days.', price: 14, defaultQty: 4, icon: <Droplets className="text-pink-500" /> },
+    { id: 2, name: 'Medium Flow Pad', description: 'Balanced comfort and absorption.', price: 10, defaultQty: 6, icon: <Droplets className="text-pink-400" /> },
+    { id: 3, name: 'Low Flow Pad', description: 'Ultra-thin for light days and spotting.', price: 8, defaultQty: 4, icon: <Droplets className="text-pink-300" /> },
+    { id: 4, name: '2 Herbal Tea Sachets', description: 'Soothing blend to reduce bloating.', price: 40, defaultQty: 1, icon: <Coffee className="text-amber-600" /> },
+    { id: 5, name: 'Cramp Relief Patches', description: 'Fast-acting long-lasting relief.', price: 55, defaultQty: 2, icon: <Zap className="text-teal-500" /> },
+    { id: 6, name: 'Dark Chocolate', description: 'Rich 70% cocoa for mood enhancement.', price: 70, defaultQty: 1, icon: <Cherry className="text-rose-800" /> },
+    { id: 8, name: 'Herbal Supplement Powder', description: 'Natural hormone balance support.', price: 65, defaultQty: 1, icon: <Pill className="text-emerald-500" /> },
+    { id: 7, name: 'V-Wash', description: 'Gentle pH-balanced intimate cleanser.', price: 56, defaultQty: 1, icon: <Droplets className="text-blue-400" /> },
+    { id: 9, name: 'Hygiene Wipes', description: 'Quick refreshing cleanse on the go.', price: 40, defaultQty: 1, icon: <Sparkles className="text-blue-300" /> },
+    { id: 10, name: 'Acne Patches', description: 'Hydrocolloid patches for clear skin.', price: 7, defaultQty: 1, icon: <Sparkles className="text-yellow-400" /> },
     { id: 11, name: 'Diet Chart', description: 'Personalized nutrition for your cycle.', price: 15, defaultQty: 1, isLocked: true, icon: <ClipboardList className="text-indigo-500" /> },
 ];
 

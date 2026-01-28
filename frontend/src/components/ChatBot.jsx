@@ -77,7 +77,7 @@ export const ChatBot = () => {
     };
 
     return (
-        <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-4 pointer-events-none">
+        <div className="sticky bottom-10 right-8 z-50 flex flex-col items-end gap-4 pointer-events-none">
             {/* Chat Window */}
             <AnimatePresence>
                 {isOpen && (
@@ -85,7 +85,7 @@ export const ChatBot = () => {
                         initial={{ opacity: 0, y: 20, scale: 0.9 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 20, scale: 0.9 }}
-                        className="bg-white w-80 sm:w-96 rounded-3xl shadow-2xl border border-pink-100 overflow-hidden pointer-events-auto flex flex-col max-h-[600px]"
+                        className="bg-white w-100 sm:w-96 rounded-3xl shadow-2xl border border-pink-100 overflow-hidden pointer-events-auto flex flex-col max-h-[600px]"
                     >
                         {/* Header */}
                         <div className="bg-[#FF6F91] p-4 flex items-center justify-between text-white">
